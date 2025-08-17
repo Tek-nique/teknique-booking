@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tek-Nique DJ Booking Widget</title>
+
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #fefefe 0%, #f8f6f3 100%);
+      --ink: #1a1a1a;
+      --ink-2: #333;
+      --ink-3: #666;
+      --muted: #e8e8e8;
+      --muted-2: #eee;
+      --brand: #333;
+      --danger: #d32f2f;
+      --success: #2e7d32;
+      --radius: 12px;
+      --shadow-1: 0 2px 12px rgba(0, 0, 0, 0.05);
+      --shadow-2: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    * , *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.5;
+    }
+
+    #teknique-widget {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .widget-header {
+      text-align: center;
+      margin-bottom: 32px;
+      padding: 30px 0;
+      background: linear-gradient(45deg, rgba(255,255,255,0.9), rgba(248,246,243,0.9));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .widget-header::before {
+      content: "";
+      position: absolute; inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 50%, rgba(255,255,255,0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(248,246,243,0.3) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .widget-header h1 {
+      margin: 0 0 6px 0;
+      font-size: clamp(24px, 5vw, 32px);
+      font-weight: 600;
+      letter-spacing: 1px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .widget-tagline {
+      font-size: 14px;
+      color: var(--ink-3);
+      margin: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .form-section,
+    .summary-card {
+      background: rgba(255,255,255,0.7);
+      padding: 24px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,0.5);
+      box-shadow: var(--shadow-1);
+      backdrop-filter: blur(10px);
+    }
+
+    .form-section:hover { box-shadow: var(--shadow-2); }
+
+    .form-section h2 {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink-2);
+      border-bottom: 1px solid var(--muted-2);
+      padding-bottom: 8px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .form-group { display: flex; flex-direction: column; }
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 6px;
+    }
+
+    .required { color: var(--danger); }
+
+    input, select, textarea {
+      padding: 12px 14px;
+      border: 2px solid var(--muted);
+      border-radius: 8px;
+      font: inherit;
+      background: rgba(255,255,255,0.95);
+      transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+      width: 100%;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(51,51,51,0.1);
+      background: #fff;
+    }
+
+    input.error, select.error, textarea.error {
+      border-color: var(--danger);
+      background: rgba(211,47,47,0.05);
+    }
+
+    .error-message {
+      color: var(--danger);
+      font-size: 13px;
+      margin-top: 4px;
+      min-height: 1em;
+    }
+
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 8px;
+      border: 1px solid var(--muted-2);
+      transition: 140ms ease;
+      cursor: pointer;
+    }
+
+    .checkbox-item:hover {
+      background: rgba(255,255,255,1);
+      border-color: #ddd;
+    }
+
+    .checkbox-item input[type="checkbox"] { width: auto; transform: scale(1.1); }
+    .checkbox-item label { margin: 0; cursor: pointer; flex: 1; font-size: 14px; }
+    .addon-price { font-weight: 700; color: #555; }
+
+    .package-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .package-option {
+      border: 2px solid var(--muted);
+      border-radius: var(--radius);
+      padding: 18px;
+      text-align: center;
+      cursor: pointer;
+      transition: 160ms ease;
+      background: rgba(255,255,255,0.95);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .package-option:hover {
+      border-color: var(--brand);
+      box-shadow: var(--shadow-2);
+    }
+
+    .package-option.selected {
+      border-color: var(--brand);
+      background: rgba(51,51,51,0.04);
+      box-shadow: var(--shadow-2);
+    }
+
+    .package-option input[type="radio"] {
+      position: absolute; opacity: 0; width: 0; height: 0;
+    }
+
+    .package-name { font-weight: 700; font-size: 16px; margin-bottom: 6px; }
+    .package-price { font-size: 22px; font-weight: 300; color: var(--ink-2); }
+    .package-hours { font-size: 12px; color: var(--ink-3); }
+
+    .most-booked { position: relative; }
+    .most-booked::after {
+      content: "Most Booked";
+      position: absolute; top: -6px; right: -6px;
+      background: var(--brand); color: #fff;
+      padding: 4px 8px; border-radius: 6px;
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .summary-card { position: sticky; top: 20px; }
+    .summary-title { font-size: 18px; font-weight: 700; margin: 0 0 12px 0; text-align: center; color: var(--ink-2); }
+    .line-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px;
+    }
+    .line-item:last-child { border-bottom: none; }
+    .line-item.total {
+      font-weight: 800; font-size: 16px; padding-top: 12px; border-top: 2px solid var(--brand); margin-top: 8px;
+    }
+    .line-item.discount { color: var(--success); }
+
+    .live-total { font-weight: 800; font-size: 18px; color: var(--ink-2); margin-top: 8px; }
+    .deposit-info {
+      background: rgba(51,51,51,0.05);
+      border-radius: 8px; padding: 12px; margin-top: 12px; font-size: 14px;
+    }
+    .deposit-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+
+    .success-message,
+    .error-banner {
+      padding: 14px 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      border: 1px solid;
+      display: none;
+    }
+    .success-message { background: rgba(46,125,50,0.08); color: var(--success); border-color: rgba(46,125,50,0.3); }
+    .error-banner   { background: rgba(211,47,47,0.08); color: var(--danger); border-color: rgba(211,47,47,0.3); }
+
+    .btn-primary, .btn-secondary {
+      padding: 14px 18px;
+      border: none; border-radius: 8px;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      transition: 140ms ease; text-decoration: none; text-align: center; display: inline-block;
+    }
+    .btn-primary { background: var(--brand); color: #fff; box-shadow: 0 2px 12px rgba(51,51,51,0.3); }
+    .btn-primary:hover { background: #1a1a1a; transform: translateY(-1px); }
+    .btn-primary:disabled { background: #bbb; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .btn-secondary { background: transparent; color: var(--brand); border: 2px solid var(--brand); }
+    .btn-secondary:hover { background: var(--brand); color: #fff; transform: translateY(-1px); }
+
+    .cta-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+
+    .mobile-sticky-bar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(15px);
+      padding: 14px 16px; box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+      display: none; align-items: center; justify-content: space-between; border-top: 1px solid rgba(0,0,0,0.08);
+    }
+    .mobile-total { font-weight: 800; font-size: 16px; }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .summary-card { position: static; }
+      .mobile-sticky-bar { display: flex; }
+      .cta-buttons { display: none; }
+      #teknique-widget { padding-bottom: 90px; }
+    }
+
+    @media print {
+      .mobile-sticky-bar, .cta-buttons { display: none !important; }
+      .summary-card { position: static; box-shadow: none; }
+    }
+
+    [aria-live] {
+      position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="teknique-widget" role="application" aria-label="Tek-Nique DJ Booking">
+    <header class="widget-header">
+      <h1>TEK-NIQUE</h1>
+      <p class="widget-tagline">Your dance floor, handled. • Florida &amp; Beyond</p>
+    </header>
+
+    <div id="success-message" class="success-message" role="alert" aria-live="polite">
+      <strong>We’ve locked your details — expect a text/email shortly.</strong>
+      <div>Your inquiry was submitted successfully. We’ll follow up to finalize your date.</div>
+    </div>
+
+    <div id="error-banner" class="error-banner" role="alert">
+      <strong>Submission Error.</strong>
+      <div id="error-text">Couldn’t reach the server. You can still download your quote as CSV.</div>
+      <button id="download-csv" class="btn-secondary" type="button" style="margin-top: 8px;">Download Quote as CSV</button>
+    </div>
+
+    <div class="layout">
+      <form id="booking-form" novalidate autocomplete="on" aria-describedby="sr-live">
+        <input type="text" name="website" class="honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;" />
+
+        <section class="form-section" aria-labelledby="contact-heading">
+          <h2 id="contact-heading">Contact Information</h2>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="firstName">First Name <span class="required">*</span></label>
+              <input type="text" id="firstName" name="firstName" required inputmode="text" autocomplete="given-name" />
+              <div class="error-message" id="firstName-error" role="alert"></div>
+            </div>
+            <div class="form-group">
+              <label for="lastName">Last Name <span class="required">*</span></label>
+              <input type="text" id="lastName" name="lastName" required inputmode="text" autocomplete="family-name" />
+              <div class="error-message" id="lastName-error" role="alert"></div>
+            </div>
+            <div class="form-group">
+              <label for="phone">Phone <span class="required">*</span></label>
+              <input type="tel" id="phone" name="phone" placeholder="(555) 123-4567" required inputmode="tel" autocomplete="tel" />
+              <div class="error-message" id="phone-error" role="alert"></div>
+            </div>
+            <div class="form-group">
+              <label for="email">Email <span class="required">*</span></label>
+              <input type="email" id="email" name="email" required autocomplete="email" />
+              <div class="error-message" id="email-error" role="alert"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="event-heading">
+          <h2 id="event-heading">Event Details</h2>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="weddingDate">Wedding Date <span class="required">*</span></label>
+              <input type="date" id="weddingDate" name="weddingDate" required />
+              <div class="error-message" id="weddingDate-error" role="alert"></div>
+            </div>
+            <div class="form-group">
+              <label for="startTime">Start Time</label>
+              <input type="time" id="startTime" name="startTime" />
+            </div>
+            <div class="form-group">
+              <label for="hours">Total Hours</label>
+              <input type="number" id="hours" name="hours" min="1" max="12" step="1" placeholder="Based on package" />
+            </div>
+            <div class="form-group">
+              <label for="guestCount">Guest Count</label>
+              <input type="number" id="guestCount" name="guestCount" min="1" inputmode="numeric" placeholder="Approximate number" />
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="venue-heading">
+          <h2 id="venue-heading">Venue &amp; Travel</h2>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="venueCity">Venue City</label>
+              <input type="text" id="venueCity" name="venueCity" placeholder="Tampa" autocomplete="address-level2" />
+            </div>
+            <div class="form-group">
+              <label for="venueZip">Venue ZIP Code</label>
+              <input type="text" id="venueZip" name="venueZip" pattern="[0-9]{5}" placeholder="33602" inputmode="numeric" autocomplete="postal-code" />
+            </div>
+            <div class="form-group">
+              <label for="travelMiles">Travel Miles Beyond 30 (if applicable)</label>
+              <input type="number" id="travelMiles" name="travelMiles" min="0" step="1" placeholder="0" />
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="package-heading">
+          <h2 id="package-heading">Select Your Package</h2>
+          <div class="package-selector" role="radiogroup" aria-label="Packages">
+            <div class="package-option selected">
+              <input type="radio" id="essential" name="package" value="essential" checked />
+              <label for="essential">
+                <div class="package-name">Essential</div>
+                <div class="package-price">$999</div>
+                <div class="package-hours">4 hours included</div>
+              </label>
+            </div>
+            <div class="package-option most-booked">
+              <input type="radio" id="signature" name="package" value="signature" />
+              <label for="signature">
+                <div class="package-name">Signature</div>
+                <div class="package-price">$1,499</div>
+                <div class="package-hours">6 hours included</div>
+              </label>
+            </div>
+            <div class="package-option">
+              <input type="radio" id="ultra" name="package" value="ultra" />
+              <label for="ultra">
+                <div class="package-name">Ultra</div>
+                <div class="package-price">$2,199</div>
+                <div class="package-hours">8 hours included</div>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="audio-heading">
+          <h2 id="audio-heading">Additional Audio Zones</h2>
+          <div class="checkbox-group">
+            <label class="checkbox-item" for="ceremonyAudio">
+              <input type="checkbox" id="ceremonyAudio" name="ceremonyAudio" />
+              <span>Ceremony Audio Zone</span>
+              <span class="addon-price" aria-hidden="true">$199</span>
+            </label>
+
+            <label class="checkbox-item" for="cocktailAudio">
+              <input type="checkbox" id="cocktailAudio" name="cocktailAudio" />
+              <span>Cocktail Audio Zone</span>
+              <span class="addon-price" aria-hidden="true">$149</span>
+            </label>
+
+            <label class="checkbox-item" for="karaoke">
+              <input type="checkbox" id="karaoke" name="karaoke" />
+              <span>Karaoke System</span>
+              <span class="addon-price" aria-hidden="true">$249</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="vp-heading">
+          <h2 id="vp-heading">Video &amp; Photo Services</h2>
+          <div class="checkbox-group">
+            <label class="checkbox-item" for="videoHighlight">
+              <input type="checkbox" id="videoHighlight" name="videoHighlight" />
+              <span>Video Highlight Film (3–5 min)</span>
+              <span class="addon-price" aria-hidden="true">$1,199</span>
+            </label>
+
+            <label class="checkbox-item" for="videoCeremony">
+              <input type="checkbox" id="videoCeremony" name="videoCeremony" />
+              <span>Video Ceremony Doc Add-on</span>
+              <span class="addon-price" aria-hidden="true">$399</span>
+            </label>
+
+            <label class="checkbox-item" for="photoBooth">
+              <input type="checkbox" id="photoBooth" name="photoBooth" />
+              <span>Photo Booth (DSLR)</span>
+              <span class="addon-price" aria-hidden="true">$599</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="light-heading">
+          <h2 id="light-heading">Lighting &amp; Special Effects</h2>
+          <div class="checkbox-group">
+            <label class="checkbox-item" for="uplighting">
+              <input type="checkbox" id="uplighting" name="uplighting" />
+              <span>Uplighting (10 fixtures)</span>
+              <span class="addon-price" aria-hidden="true">$399</span>
+            </label>
+
+            <label class="checkbox-item" for="intelligentLighting">
+              <input type="checkbox" id="intelligentLighting" name="intelligentLighting" />
+              <span>Intelligent Lighting Show</span>
+              <span class="addon-price" aria-hidden="true">$499</span>
+            </label>
+
+            <label class="checkbox-item" for="coldSparks">
+              <input type="checkbox" id="coldSparks" name="coldSparks" />
+              <span>Cold Sparks (pair)</span>
+              <span class="addon-price" aria-hidden="true">$399</span>
+            </label>
+
+            <label class="checkbox-item" for="cloudEffect">
+              <input type="checkbox" id="cloudEffect" name="cloudEffect" />
+              <span>Dancing on a Cloud</span>
+              <span class="addon-price" aria-hidden="true">$349</span>
+            </label>
+
+            <label class="checkbox-item" for="officiant">
+              <input type="checkbox" id="officiant" name="officiant" />
+              <span>Officiant Service</span>
+              <span class="addon-price" aria-hidden="true">$299</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="addl-heading">
+          <h2 id="addl-heading">Additional Information</h2>
+          <div class="form-group">
+            <label for="discountCode">Discount Code (optional)</label>
+            <input type="text" id="discountCode" name="discountCode" placeholder="FRIENDS10, WEEKDAY, EARLYBIRD" />
+          </div>
+          <div class="form-group">
+            <label for="notes">Special Requests or Notes</label>
+            <textarea id="notes" name="notes" rows="4" placeholder="Tell us about your vision, special songs, or any other details..."></textarea>
+          </div>
+        </section>
+
+        <div id="sr-live" aria-live="polite" aria-atomic="true"></div>
+      </form>
+
+      <aside class="summary-card" aria-labelledby="summary-heading">
+        <h3 id="summary-heading" class="summary-title">Your Quote Summary</h3>
+        <div id="quote-breakdown">
+          <div class="line-item"><span>Essential Package (4 hours)</span><span>$999</span></div>
+        </div>
+
+        <div id="live-total" class="live-total" aria-live="polite">Total: $999</div>
+
+        <div class="deposit-info" aria-label="Payment breakdown">
+          <div class="deposit-row"><span>Deposit Required (25%):</span><span id="deposit-amount">$250</span></div>
+          <div class="deposit-row"><span>Balance Due:</span><span id="balance-amount">$749</span></div>
+        </div>
+
+        <div class="cta-buttons">
+          <button class="btn-primary" id="submit-btn" type="submit" form="booking-form">Submit Inquiry</button>
+          <a class="btn-secondary" href="tel:813-421-4802" aria-label="Call or text Tek-Nique at 813-421-4802">Text/Call 813-421-4802</a>
+        </div>
+      </aside>
+    </div>
+
+    <div class="mobile-sticky-bar" role="region" aria-label="Mobile quote actions">
+      <div class="mobile-total" id="mobile-total" aria-live="polite">Est. Total: $999</div>
+      <button class="btn-primary" id="mobile-submit-btn" type="submit" form="booking-form">Submit Inquiry</button>
+    </div>
+  </div>
+
+  <script>
+    const CONFIG = {
+      PACKAGES: {
+        essential: { baseHours: 4, basePrice: 999, label: "Essential" },
+        signature: { baseHours: 6, basePrice: 1499, label: "Signature" },
+        ultra:     { baseHours: 8, basePrice: 2199, label: "Ultra" }
+      },
+      OVERTIME_RATE: 250,
+      ADD_ONS: {
+        ceremonyAudio: 199,
+        cocktailAudio: 149,
+        karaoke: 249,
+        videoHighlight: 1199,
+        videoCeremony: 399,
+        uplighting: 399,
+        intelligentLighting: 499,
+        coldSparks: 399,
+        cloudEffect: 349,
+        photoBooth: 599,
+        officiant: 299
+      },
+      TRAVEL: { freeMiles: 30, ratePerMile: 1.25 },
+      DISCOUNTS: {
+        WEEKDAY: 0.10,
+        EARLYBIRD: 0.05,
+        FRIENDS10: 0.10
+      },
+      TAX_RATE: 0.00,
+      DEPOSIT_RATE: 0.25,
+      WEB_APP_URL: "",
+      SECRET_KEY: "teknique-secret-2024"
+    };
+
+    const $  = (s, ctx=document) => ctx.querySelector(s);
+    const $$ = (s, ctx=document) => Array.from(ctx.querySelectorAll(s));
+
+    const currency = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(Number(n || 0)));
+    const clampNonNegativeInt = (n) => Math.max(0, parseInt(n, 10) || 0);
+    const todayLocalISO = () => { const d = new Date(); const tzOff = d.getTimezoneOffset() * 60000; return new Date(d - tzOff).toISOString().slice(0,10); };
+
+    function calcPackage(packageType, hoursOverride) {
+      const pkg = CONFIG.PACKAGES[packageType];
+      if (!pkg) return { base: 0, overtime: 0, hours: 0, label: "Unknown" };
+      const hours = Number.isFinite(+hoursOverride) && hoursOverride > 0 ? +hoursOverride : pkg.baseHours;
+      const overtimeHours = Math.max(0, hours - pkg.baseHours);
+      return { base: pkg.basePrice, overtime: overtimeHours * CONFIG.OVERTIME_RATE, hours, label: pkg.label, includedHours: pkg.baseHours };
+    }
+    function calcAddOns(selections) { let total = 0; Object.entries(CONFIG.ADD_ONS).forEach(([k, price]) => { if (selections[k]) total += price; }); return total; }
+    function calcTravel(milesBeyondFree) { const miles = clampNonNegativeInt(milesBeyondFree); return miles > 0 ? miles * CONFIG.TRAVEL.ratePerMile : 0; }
+    function calcDiscounts({ weddingDate, discountCode }) {
+      const discounts = [];
+      if (weddingDate) {
+        const date = new Date(weddingDate);
+        if (!Number.isNaN(+date)) {
+          const day = date.getDay(); if (day >= 1 && day <= 4) discounts.push({ name: "Weekday Discount", rate: CONFIG.DISCOUNTS.WEEKDAY });
+          const diffDays = Math.floor((date - new Date()) / (1000 * 60 * 60 * 24)); if (diffDays >= 120) discounts.push({ name: "Early Bird Discount", rate: CONFIG.DISCOUNTS.EARLYBIRD });
+        }
+      }
+      const code = String(discountCode || "").trim().toUpperCase(); if (code === "FRIENDS10") discounts.push({ name: "Friends Discount", rate: CONFIG.DISCOUNTS.FRIENDS10 });
+      return discounts;
+    }
+    function computeQuote(formData) {
+      const pkg = calcPackage(formData.package, formData.hours);
+      const addOnsTotal = calcAddOns(formData.addOns || {});
+      const travelTotal = calcTravel(formData.travelMiles);
+      const subtotal = pkg.base + pkg.overtime + addOnsTotal + travelTotal;
+      const discounts = calcDiscounts(formData);
+      const totalDiscountRate = discounts.reduce((acc, d) => acc + (d.rate || 0), 0);
+      const discountValue = Math.min(0.5, totalDiscountRate) * subtotal;
+      const taxedSubtotal = subtotal - discountValue;
+      const tax = CONFIG.TAX_RATE * taxedSubtotal;
+      const total = taxedSubtotal + tax;
+      const deposit = CONFIG.DEPOSIT_RATE * total;
+      const balance = total - deposit;
+      return { pkg, addOnsTotal, travelTotal, subtotal, discounts, discountValue, tax, total, deposit, balance };
+    }
+    function updateSummary(formData) {
+      const quote = computeQuote(formData);
+      const breakdown = document.getElementById("quote-breakdown"); breakdown.innerHTML = "";
+      const pkgLabel = `${quote.pkg.label} Package (${quote.pkg.includedHours} hours included${quote.pkg.hours && quote.pkg.hours !== quote.pkg.includedHours ? `, ${quote.pkg.hours} selected` : ""})`;
+      breakdown.appendChild(lineItem(pkgLabel, currency(quote.pkg.base)));
+      if (quote.pkg.overtime > 0) { const overtimeHours = Math.max(0, quote.pkg.hours - quote.pkg.includedHours); breakdown.appendChild(lineItem(`Overtime (${overtimeHours}h @ ${currency(CONFIG.OVERTIME_RATE)}/h)`, currency(quote.pkg.overtime))); }
+      Object.entries(CONFIG.ADD_ONS).forEach(([key, price]) => { if (formData.addOns && formData.addOns[key]) breakdown.appendChild(lineItem(readableAddon(key), currency(price))); });
+      if (quote.travelTotal > 0) breakdown.appendChild(lineItem("Travel (beyond 30mi)", currency(quote.travelTotal)));
+      breakdown.appendChild(lineItem("Subtotal", currency(quote.subtotal)));
+      if (quote.discounts.length > 0) { quote.discounts.forEach(d => breakdown.appendChild(lineItem(d.name, `- ${currency(d.rate * quote.subtotal)}`, true))); }
+      if (CONFIG.TAX_RATE > 0) breakdown.appendChild(lineItem("Tax", currency(quote.tax)));
+      breakdown.appendChild(lineItem("Total", currency(quote.total), false, true));
+      document.getElementById("live-total").textContent = `Total: ${currency(quote.total)}`;
+      document.getElementById("mobile-total").textContent = `Est. Total: ${currency(quote.total)}`;
+      document.getElementById("deposit-amount").textContent = currency(quote.deposit);
+      document.getElementById("balance-amount").textContent = currency(quote.balance);
+      document.getElementById("sr-live").textContent = `Updated total ${Math.round(quote.total)} dollars. Deposit ${Math.round(quote.deposit)} dollars.`;
+    }
+    function lineItem(label, value, isDiscount=false, isTotal=false) {
+      const div = document.createElement("div"); div.className = "line-item" + (isDiscount ? " discount" : "") + (isTotal ? " total" : "");
+      const left = document.createElement("span"); left.textContent = label;
+      const right = document.createElement("span"); right.textContent = value;
+      div.append(left, right); return div; }
+    function readableAddon(key) { const map = { ceremonyAudio: "Ceremony Audio Zone", cocktailAudio: "Cocktail Audio Zone", karaoke: "Karaoke System", videoHighlight: "Video Highlight Film", videoCeremony: "Video Ceremony Doc Add-on", photoBooth: "Photo Booth (DSLR)", uplighting: "Uplighting (10 fixtures)", intelligentLighting: "Intelligent Lighting Show", coldSparks: "Cold Sparks (pair)", cloudEffect: "Dancing on a Cloud", officiant: "Officiant Service" }; return map[key] || key; }
+    function collectFormData() {
+      const pkg = document.querySelector("input[name='package']:checked")?.value || "essential";
+      const addOns = {}; Object.keys(CONFIG.ADD_ONS).forEach(k => addOns[k] = document.getElementById(k)?.checked || false);
+      return { package: pkg, hours: clampNonNegativeInt(document.getElementById("hours")?.value), weddingDate: document.getElementById("weddingDate")?.value || "", startTime: document.getElementById("startTime")?.value || "", guestCount: clampNonNegativeInt(document.getElementById("guestCount")?.value), venueCity: document.getElementById("venueCity")?.value?.trim() || "", venueZip: document.getElementById("venueZip")?.value?.trim() || "", travelMiles: clampNonNegativeInt(document.getElementById("travelMiles")?.value), discountCode: document.getElementById("discountCode")?.value?.trim(), notes: document.getElementById("notes")?.value?.trim() || "", firstName: document.getElementById("firstName")?.value?.trim() || "", lastName: document.getElementById("lastName")?.value?.trim() || "", phone: document.getElementById("phone")?.value?.trim() || "", email: document.getElementById("email")?.value?.trim() || "", addOns };
+    }
+    function setFieldError(id, msg) {
+      const input = document.getElementById(id);
+      const box = document.getElementById(id + "-error");
+      if (!input || !box) return;
+      input.classList.toggle("error", !!msg);
+      input.setAttribute("aria-invalid", !!msg);
+      box.textContent = msg || "";
+    }
+    function validate(formEl) {
+      let ok = true; const data = collectFormData();
+      if (formEl.querySelector("input.honeypot")?.value) return { ok: false, data, reason: "Spam detected." };
+      if (!data.firstName) { setFieldError("firstName", "First name is required."); ok = false; } else setFieldError("firstName");
+      if (!data.lastName)  { setFieldError("lastName",  "Last name is required.");  ok = false; } else setFieldError("lastName");
+      const digits = (data.phone.match(/\d/g) || []).join(""); if (digits.length < 10) { setFieldError("phone", "Enter a valid phone number."); ok = false; } else setFieldError("phone");
+      const emailOK = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email); if (!emailOK) { setFieldError("email", "Enter a valid email address."); ok = false; } else setFieldError("email");
+      if (!data.weddingDate) { setFieldError("weddingDate", "Please select a date."); ok = false; } else { const d = new Date(data.weddingDate); if (Number.isNaN(+d)) { setFieldError("weddingDate", "Invalid date."); ok = false; } else setFieldError("weddingDate"); }
+      return { ok, data };
+    }
+    async function submitForm(e) {
+      e.preventDefault(); const form = document.getElementById("booking-form"); const { ok, data, reason } = validate(form);
+      if (!ok) { showError(reason || "Please fix the highlighted fields."); return; }
+      const quote = computeQuote(data);
+      const payload = { secret: CONFIG.SECRET_KEY, submittedAt: new Date().toISOString(), ...data, quote: { subtotal: quote.subtotal, discountValue: quote.discountValue, tax: quote.tax, total: quote.total, deposit: quote.deposit, balance: quote.balance, package: { name: quote.pkg.label, hours: quote.pkg.hours, includedHours: quote.pkg.includedHours, base: quote.pkg.base, overtime: quote.pkg.overtime }, addOns: data.addOns, travel: quote.travelTotal } };
+      disableSubmit(true); hideError(); try { if (!CONFIG.WEB_APP_URL) throw new Error("WEB_APP_URL not configured"); const res = await fetch(CONFIG.WEB_APP_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); if (!res.ok) throw new Error(`Server responded ${res.status}`); showSuccess(); } catch (err) { console.error(err); showError("Couldn’t reach server. You can download your quote as CSV and send it to us."); } finally { disableSubmit(false); }
+    }
+    function disableSubmit(disabled) { document.getElementById("submit-btn")?.toggleAttribute("disabled", disabled); document.getElementById("mobile-submit-btn")?.toggleAttribute("disabled", disabled); }
+    function showSuccess() { document.getElementById("success-message").style.display = "block"; hideError(); }
+    function showError(msg) { const b = document.getElementById("error-banner"); document.getElementById("error-text").textContent = msg || "Something went wrong."; b.style.display = "block"; document.getElementById("success-message").style.display = "none"; }
+    function hideError() { document.getElementById("error-banner").style.display = "none"; }
+    function downloadCSV() {
+      const data = collectFormData(); const quote = computeQuote(data);
+      const rows = []; const push = (k, v) => rows.push([k, String(v ?? "")]);
+      push("First Name", data.firstName); push("Last Name", data.lastName); push("Phone", data.phone); push("Email", data.email); push("Wedding Date", data.weddingDate);
+      push("Start Time", data.startTime); push("Hours", data.hours); push("Guest Count", data.guestCount); push("Venue City", data.venueCity); push("Venue ZIP", data.venueZip);
+      push("Travel Miles >30", data.travelMiles); push("Package", quote.pkg.label); push("Package Base", quote.pkg.base); push("Overtime", quote.pkg.overtime);
+      Object.entries(data.addOns).forEach(([k, on]) => { if (on) push(`Add-on: ${readableAddon(k)}`, CONFIG.ADD_ONS[k]); });
+      push("Travel", quote.travelTotal); push("Subtotal", quote.subtotal); quote.discounts.forEach(d => push(`Discount: ${d.name}`, `${Math.round(d.rate*100)}%`)); push("Discount Value", quote.discountValue); push("Tax", quote.tax); push("Total", quote.total); push("Deposit (25%)", quote.deposit); push("Balance", quote.balance); push("Notes", data.notes);
+      const csv = "Field,Value\n" + rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n"); const blob = new Blob([csv], { type: "text/csv;charset=utf-8" }); const a = document.createElement("a"); const dt = todayLocalISO(); a.href = URL.createObjectURL(blob); a.download = `teknique-quote-${dt}.csv`; document.body.appendChild(a); a.click(); a.remove();
+    }
+    function setUpPackageCardSelection() { document.querySelectorAll(".package-option").forEach(card => { card.addEventListener("click", () => { const radio = card.querySelector("input[type='radio']"); if (!radio) return; radio.checked = true; document.querySelectorAll(".package-option").forEach(c => c.classList.toggle("selected", c === card)); updateSummary(collectFormData()); }); }); document.querySelectorAll("input[name='package']").forEach(radio => { radio.addEventListener("change", () => { document.querySelectorAll(".package-option").forEach(c => { const r = c.querySelector("input[type='radio']"); c.classList.toggle("selected", r && r.checked); }); updateSummary(collectFormData()); }); }); }
+    function setUpLivePricing() { const inputs = ["#hours", "#weddingDate", "#startTime", "#guestCount", "#venueCity", "#venueZip", "#travelMiles", "#discountCode", "#notes", "#firstName", "#lastName", "#phone", "#email"]; inputs.forEach(sel => document.querySelector(sel)?.addEventListener("input", () => updateSummary(collectFormData()))); Object.keys(CONFIG.ADD_ONS).forEach(k => document.getElementById(k)?.addEventListener("change", () => updateSummary(collectFormData()))); }
+    function setUpSubmit() { document.getElementById("booking-form").addEventListener("submit", submitForm); document.getElementById("download-csv").addEventListener("click", downloadCSV); }
+    (function init() {
+      const dateEl = document.getElementById("weddingDate"); if (dateEl) dateEl.min = todayLocalISO(); setUpPackageCardSelection(); setUpLivePricing(); setUpSubmit(); updateSummary(collectFormData()); })();
+  </script>
+</body>
+</html>
