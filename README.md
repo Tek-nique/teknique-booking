@@ -41,3 +41,14 @@ This repository contains a single‑page static booking widget for Tek‑Nique D
 ## License
 
 This project is provided as‑is for demonstration purposes. You are free to modify and use it for your own booking needs.
+
+## Video (Remotion)
+
+The `video/` folder is a separate [Remotion](https://www.remotion.dev/) project for making videos with React. It doesn't affect the booking widget.
+
+```bash
+cd video
+npm install
+npm run studio   # live preview in the browser
+npm run render   # writes out/hello.mp4
+```
