@@ -1,0 +1,7 @@
+{
+  "name": "teknique-hyperframes",
+  "private": true,
+  "devDependencies": {
+    "hyperframes": "0.8.185"
+  }
+}

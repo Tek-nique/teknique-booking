@@ -52,3 +52,15 @@ npm install
 npm run studio   # live preview in the browser
 npm run render   # writes out/hello.mp4
 ```
+
+## Video (HyperFrames)
+
+The `hyperframes/` folder holds the [HyperFrames](https://hyperframes.heygen.com/) CLI, which turns HTML/CSS animations into MP4s.
+
+```bash
+cd hyperframes
+npm install
+npx hyperframes init     # scaffold a composition
+npx hyperframes preview  # live preview
+npx hyperframes render   # render to MP4
+```
